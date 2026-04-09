@@ -28,7 +28,10 @@ app.get("/login", (req, res) => {
 
 app.get("/callback", async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send("Missing code.");
+
+  if (!code) {
+    return res.redirect("/fail");
+  }
 
   try {
     const tokenRes = await axios.post(
@@ -59,7 +62,9 @@ app.get("/callback", async (req, res) => {
 
     await axios.put(
       `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}`,
-      { access_token: accessToken },
+      {
+        access_token: accessToken
+      },
       {
         headers: {
           Authorization: `Bot ${BOT_TOKEN}`,
@@ -78,21 +83,124 @@ app.get("/callback", async (req, res) => {
       }
     );
 
-    res.send(`
-      <html>
-        <body style="margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;background:#f2d2d7;font-family:Arial,sans-serif;">
-          <div style="max-width:520px;width:90%;background:rgba(255,255,255,0.65);backdrop-filter:blur(12px);border-radius:24px;padding:28px;text-align:center;box-shadow:0 0 24px rgba(0,0,0,0.12);">
-            <div style="background:#7ed3a7;color:#fff;padding:18px 20px;border-radius:18px;font-size:28px;font-weight:700;">
-              Successfully verified! You can close this now.
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
+    return res.redirect("/success");
   } catch (err) {
+    console.error("VERIFY ERROR:");
     console.error(err.response?.data || err.message);
-    res.status(500).send("verification failed 😭");
+    return res.redirect("/fail");
   }
+});
+
+app.get("/success", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>verified</title>
+      <style>
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(180deg, #f6d9df 0%, #f4e9ec 100%);
+          font-family: Arial, sans-serif;
+          padding: 20px;
+        }
+        .card {
+          width: 100%;
+          max-width: 520px;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(14px);
+          border-radius: 24px;
+          padding: 28px 22px;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        h1 {
+          margin: 0 0 10px;
+          color: #7ed3a7;
+          font-size: 2rem;
+        }
+        p {
+          margin: 0;
+          color: #4b3940;
+          font-size: 1rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>Successfully verified! 🎉</h1>
+        <p>You can close this now.</p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.get("/fail", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>verification failed</title>
+      <style>
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(180deg, #f6d9df 0%, #f4e9ec 100%);
+          font-family: Arial, sans-serif;
+          padding: 20px;
+        }
+        .card {
+          width: 100%;
+          max-width: 520px;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(14px);
+          border-radius: 24px;
+          padding: 28px 22px;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        h1 {
+          margin: 0 0 10px;
+          color: #d66b7d;
+          font-size: 2rem;
+        }
+        p {
+          margin: 0 0 18px;
+          color: #4b3940;
+        }
+        a {
+          display: inline-block;
+          padding: 14px 22px;
+          border-radius: 16px;
+          background: #efc4cb;
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+  <h1>verification incomplete</h1>
+  <p>please try again, doll ♡</p>
+  <a href="/login">Try again</a>
+</div>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.listen(PORT, () => {
