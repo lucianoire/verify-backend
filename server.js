@@ -85,8 +85,16 @@ app.get("/callback", async (req, res) => {
 
     return res.redirect("/success");
   } catch (err) {
-    console.error("VERIFY ERROR:");
-    console.error(err.response?.data || err.message);
+    console.log("=== VERIFY ERROR START ===");
+    console.log("status:", err.response?.status);
+    console.log("data:", JSON.stringify(err.response?.data, null, 2));
+    console.log("message:", err.message);
+    console.log("CLIENT_ID exists:", !!CLIENT_ID);
+    console.log("CLIENT_SECRET exists:", !!CLIENT_SECRET);
+    console.log("REDIRECT_URI:", REDIRECT_URI);
+    console.log("GUILD_ID:", GUILD_ID);
+    console.log("ROLE_ID:", ROLE_ID);
+    console.log("=== VERIFY ERROR END ===");
     return res.redirect("/fail");
   }
 });
@@ -134,7 +142,7 @@ app.get("/success", (req, res) => {
     </head>
     <body>
       <div class="card">
-        <h1>Successfully verified! 🎉</h1>
+        <h1>You are now verified 🎉</h1>
         <p>You can close this now.</p>
       </div>
     </body>
@@ -193,10 +201,9 @@ app.get("/fail", (req, res) => {
     </head>
     <body>
       <div class="card">
-  <h1>verification incomplete</h1>
-  <p>please try again, doll ♡</p>
-  <a href="/login">Try again</a>
-</div>
+        <h1>verification incomplete</h1>
+        <p>please try again, doll ♡</p>
+        <a href="/login">Try again</a>
       </div>
     </body>
     </html>
