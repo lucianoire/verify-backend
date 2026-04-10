@@ -17,9 +17,7 @@ app.get("/", (req, res) => {
 
 app.get("/login", (req, res) => {
   const redirect = encodeURIComponent(REDIRECT_URI);
-
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${redirect}&scope=identify%20guilds.join`;
-
   res.redirect(url);
 });
 
@@ -31,7 +29,6 @@ app.get("/callback", async (req, res) => {
   }
 
   try {
-    // get token
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
@@ -50,7 +47,6 @@ app.get("/callback", async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // get user
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -59,12 +55,9 @@ app.get("/callback", async (req, res) => {
 
     const userId = userRes.data.id;
 
-    // join server
     await axios.put(
       `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}`,
-      {
-        access_token: accessToken
-      },
+      { access_token: accessToken },
       {
         headers: {
           Authorization: `Bot ${BOT_TOKEN}`,
@@ -73,7 +66,6 @@ app.get("/callback", async (req, res) => {
       }
     );
 
-    // give role
     await axios.put(
       `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}/roles/${ROLE_ID}`,
       {},
@@ -84,13 +76,9 @@ app.get("/callback", async (req, res) => {
       }
     );
 
-    // ✅ SUCCESS → balik sa site mo (with animation trigger)
     return res.redirect("https://lucianoire.github.io/?success=true");
-
   } catch (err) {
     console.log("ERROR:", err.response?.data || err.message);
-
-    // ❌ FAIL → balik sa site mo (optional)
     return res.redirect("https://lucianoire.github.io/?error=true");
   }
 });
