@@ -16,12 +16,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const url =
-    "https://discord.com/oauth2/authorize" +
-    `?client_id=${CLIENT_ID}` +
-    `&response_type=code` +
-    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-    `&scope=identify%20guilds.join`;
+  const redirect = encodeURIComponent(REDIRECT_URI);
+
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${redirect}&scope=identify%20guilds.join`;
 
   res.redirect(url);
 });
